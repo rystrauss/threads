@@ -177,6 +177,7 @@ void thread_join(int target_thread_number) {
     // switch to target_thread_number thread
     if (setjmp(current_thread_context->buffer) == 0) {
         current_thread_context = &thread_context[target_thread_number];
+        setitimer(ITIMER_REAL, &start_timer, NULL);
         longjmp(current_thread_context->buffer, 1);
     }
         // Timer resets when we enter the next thread
@@ -193,8 +194,9 @@ void thread_exit(void *return_value) {
     if (current_thread_context->joiner_thread_number != -1) {
         current_thread_context = &thread_context[current_thread_context->joiner_thread_number];
         current_thread_context->state = STATE_ACTIVE;
+        setitimer(ITIMER_REAL, &start_timer, NULL);
         longjmp(current_thread_context->buffer, 1);
     }
-
+    setitimer(ITIMER_REAL, &start_timer, NULL);
     thread_yield(); // Nothing else to do. Just exit
 }
